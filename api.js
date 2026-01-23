@@ -34,6 +34,25 @@ app.get("/allNotes", (req, res) => {
         }
     })
 })
+// Get note by ID
+app.get("/note/:id", (req, res) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id)) {
+        return res.status(400).json(defs.response("Error", "ID must be a number !", 0, null))
+    }
+    connection.query("SELECT * FROM notes WHERE id = ?", [id], (err, rows) => {
+        if (!err) {
+            if (rows.length > 0) {
+                return res.json(defs.response("Success", "Task found", rows.affectedRows, rows))
+            } else {
+                return res.status(404).json(defs.response("Error", "Task not found", 0, null))
+            }
+        } else {
+            res.status(500).json(defs.response("Error", err.message, 0, null))
+        }
+    })
+})
+
 // create a note 
 app.post("/note/create", (req, res) => {
     const postData = req.body
