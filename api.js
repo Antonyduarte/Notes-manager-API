@@ -1,15 +1,16 @@
 // require const's
+const dotenv = require("dotenv").config()
 const express = require("express")
 const mysql = require("mysql2")
 const cors = require("cors")
 const dataCfg = require("./src/cfg")
-const { createConnection } = require("node:net")
 const defs = require("./src/responses")
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
 app.listen(3000, () => {
     console.log("API is running")
 })
@@ -23,7 +24,7 @@ app.use((req, res, next) => {
     }
 })
 
-const connection = mysql.createConnection(dataCfg.user)
+const connection = mysql.createConnection(dataCfg.db)
 // get NOTES
 app.get("/allNotes", (req, res) => {
     connection.query("SELECT * FROM notes", (err, result) => {
@@ -145,6 +146,7 @@ app.delete("/note/delete/:id", (req, res) => {
         }
     })
 })
+
 app.use((req, res) => {
     res.status(404).json(defs.response("Error", "Route NOT found", 0, null))
 })
