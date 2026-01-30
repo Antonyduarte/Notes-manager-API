@@ -24,7 +24,8 @@ app.use((req, res, next) => {
     }
 })
 
-const connection = mysql.createConnection(dataCfg)
+// const connection = mysql.createConnection(dataCfg)
+const connection = mysql.createPool(dataCfg)
 // get NOTES
 app.get("/allNotes", (req, res) => {
     connection.query("SELECT * FROM notes", (err, result) => {
@@ -150,4 +151,5 @@ app.delete("/note/delete/:id", (req, res) => {
 app.use((req, res) => {
     res.status(404).json(defs.response("Error", "Route NOT found", 0, null))
 })
+
 
