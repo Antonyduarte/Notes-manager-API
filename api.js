@@ -1,5 +1,5 @@
 // require const's
-const dotenv = require("dotenv").config()
+require("dotenv").config()
 const express = require("express")
 const mysql = require("mysql2")
 const cors = require("cors")
@@ -24,7 +24,8 @@ app.use((req, res, next) => {
     }
 })
 
-const connection = mysql.createConnection(dataCfg.db)
+// const connection = mysql.createConnection(dataCfg)
+const connection = mysql.createPool(dataCfg)
 // get NOTES
 app.get("/allNotes", (req, res) => {
     connection.query("SELECT * FROM notes", (err, result) => {
@@ -44,7 +45,7 @@ app.get("/note/:id", (req, res) => {
     connection.query("SELECT * FROM notes WHERE id = ?", [id], (err, rows) => {
         if (!err) {
             if (rows.length > 0) {
-                return res.json(defs.response("Success", "Task found", rows.affectedRows, rows))
+                return res.json(defs.response("Success", "Note found", rows.length, rows))
             } else {
                 return res.status(404).json(defs.response("Error", "Task not found", 0, null))
             }
@@ -53,6 +54,7 @@ app.get("/note/:id", (req, res) => {
         }
     })
 })
+//search note by NOTE
 app.get("/note/search/:note", (req, res) => {
     const note = String(req.params.note)
     if (!note || note.trim() === "") {
