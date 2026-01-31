@@ -63,7 +63,7 @@ app.get("/note/search/:note", (req, res) => {
     connection.query("SELECT * FROM notes WHERE note LIKE ?", [`%${note}%`], (err, rows) => {
         if (!err) {
             if (rows.length > 0) {
-                return res.json(defs.response("Success", "Note found", rows.affectedRows, rows))
+                return res.json(defs.response("Success", "Note(s) found", rows.affectedRows, rows))
             } else {
                 return res.status(404).json(defs.response("Error", "Note not found", 0, null))
             }
