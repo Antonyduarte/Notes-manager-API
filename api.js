@@ -119,7 +119,7 @@ app.put("/note/:id", (req, res) => {
     })
 })
 // DELETE ALL NOTES
-app.delete("/note/deleteAll", (req, res) => {
+app.delete("/notes", (req, res) => {
     connection.query("DELETE FROM notes", (err, rows) => {
         if (!err) {
             if (rows.affectedRows <= 0) {
