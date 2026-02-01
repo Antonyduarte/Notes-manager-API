@@ -27,7 +27,7 @@ app.use((req, res, next) => {
 // const connection = mysql.createConnection(dataCfg)
 const connection = mysql.createPool(dataCfg)
 // get NOTES
-app.get("/allNotes", (req, res) => {
+app.get("/notes", (req, res) => {
     connection.query("SELECT * FROM notes", (err, result) => {
         if (err) {
             return res.status(503).json(defs.response("ERROR", "Notes NOT found", 0, null))
@@ -73,7 +73,7 @@ app.get("/note/search/:note", (req, res) => {
     })
 })
 // create a note 
-app.post("/note/create", (req, res) => {
+app.post("/note", (req, res) => {
     const postData = req.body
     const note = postData.note
     const title = postData.title
@@ -94,7 +94,7 @@ app.post("/note/create", (req, res) => {
     })
 })
 // edit NOTE
-app.put("/note/edit/:id", (req, res) => {
+app.put("/note/:id", (req, res) => {
     const postData = req.body
     const title = postData.title
     const note = postData.note 
@@ -119,7 +119,7 @@ app.put("/note/edit/:id", (req, res) => {
     })
 })
 // DELETE ALL NOTES
-app.delete("/notes/deleteAll", (req, res) => {
+app.delete("/note/deleteAll", (req, res) => {
     connection.query("DELETE FROM notes", (err, rows) => {
         if (!err) {
             if (rows.affectedRows <= 0) {
@@ -133,7 +133,7 @@ app.delete("/notes/deleteAll", (req, res) => {
     })
 })
 // delete specifc note
-app.delete("/note/delete/:id", (req, res) => {
+app.delete("/note/:id", (req, res) => {
     const id = req.params.id
     // query connection
     connection.query("DELETE FROM notes WHERE id = ?", [id], (err, rows) => {
