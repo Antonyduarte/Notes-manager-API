@@ -1,5 +1,3 @@
-const { timeStamp } = require("node:console")
-
 function response(status, message, afftdrows, data = null) {
     return {
         status,
@@ -9,7 +7,14 @@ function response(status, message, afftdrows, data = null) {
         timeStamp: new Date().getTime()
     }
 }
+function userReq(username, email, password) {
+    return {
+        username,
+        email,
+        password,
+    }
+}
 
 module.exports = {
-    response
+    response, userReq
 }

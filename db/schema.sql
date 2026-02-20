@@ -1,4 +1,4 @@
-CsREATE TABLE `note` (
+CREATE TABLE `note` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(255) NOT NULL,
   `note` TEXT,

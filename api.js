@@ -1,11 +1,14 @@
 // require const's
 require("dotenv").config()
+const jwt = require("jsonwebtoken")
 const express = require("express")
 const mysql = require("mysql2")
 const cors = require("cors")
 const dataCfg = require("./src/cfg")
 const defs = require("./src/responses")
 const app = express()
+const secretKey = require("./src/secret")
+const sKey = require("./src/secret")
 
 app.use(cors())
 app.use(express.json())
@@ -24,8 +27,44 @@ app.use((req, res, next) => {
     }
 })
 
+//auth middleware
+const authToken = (req, res, next) => {
+    const token = req.headers["authorization"]
+    if(!token) {
+        return res.status(403).json(defs.response("Error", "Unvailable token", 0, null))
+    } else {
+        jwt.verify(token, secretKey.key, (err, user) => {
+            if (err) {
+                return res.status(403).json(defs.response("Error", "Invalid token", 0, null))
+            } else {
+                next()
+            }
+        })
+    }
+}
+
 // const connection = mysql.createConnection(dataCfg)
 const connection = mysql.createPool(dataCfg)
+
+app.post("/register", (req, res) => {
+    const postData = req.body
+    const username = postData.username
+    const email = postData.email
+    const password = postData.password
+
+    connection.query("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", [username, email, password], (err, result) => {
+        if (username.trim() === '' || email.trim() === '' || password.trim() === '') {
+            return res.status(400).json(defs.response("Error", "Is there any empty field", 0, null)) //
+        }
+        if (err) {
+            return res.status(500).json(defs.response("Error", "Username or email already exists.", 0, null))
+        } else {
+            return res.status(201).json(defs.response("Success", "Wellcome !, Please Log-in again", result.length))
+        }
+    })
+
+})
+
 // get NOTES
 app.get("/notes", (req, res) => {
     connection.query("SELECT * FROM notes", (err, result) => {
