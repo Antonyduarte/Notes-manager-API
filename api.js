@@ -45,7 +45,7 @@ const authToken = (req, res, next) => {
 
 // const connection = mysql.createConnection(dataCfg)
 const connection = mysql.createPool(dataCfg)
-
+//register endpoint
 app.post("/register", (req, res) => {
     const postData = req.body
     const username = postData.username
