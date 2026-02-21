@@ -8,7 +8,7 @@ const dataCfg = require("./src/cfg")
 const defs = require("./src/responses")
 const app = express()
 const secret = require("./src/secret")
-// let secretTempKey = "e7048bfb63dc3e8c0354c3eb23b2a1df"
+
 
 app.use(cors())
 app.use(express.json())
