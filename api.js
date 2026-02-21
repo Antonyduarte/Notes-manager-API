@@ -7,8 +7,8 @@ const cors = require("cors")
 const dataCfg = require("./src/cfg")
 const defs = require("./src/responses")
 const app = express()
-const secretKey = require("./src/secret")
-const sKey = require("./src/secret")
+const secret = require("./src/secret")
+// let secretTempKey = "e7048bfb63dc3e8c0354c3eb23b2a1df"
 
 app.use(cors())
 app.use(express.json())
@@ -16,6 +16,7 @@ app.use(express.urlencoded({ extended: true }))
 
 app.listen(3000, () => {
     console.log("API is running")
+    console.log(secret.key)
 })
 const API_VERSION = "1.0.0"
 const API_AVAILABLE = true
@@ -29,18 +30,20 @@ app.use((req, res, next) => {
 
 //auth middleware
 const authToken = (req, res, next) => {
-    const token = req.headers["authorization"]
-    if(!token) {
-        return res.status(403).json(defs.response("Error", "Unvailable token", 0, null))
-    } else {
-        jwt.verify(token, secretKey.key, (err, user) => {
-            if (err) {
-                return res.status(403).json(defs.response("Error", "Invalid token", 0, null))
-            } else {
-                next()
-            }
-        })
+    const authHeader = req.headers.authorization
+
+    if (!authHeader) {
+        return res.status(403).json(defs.response("Error", "Unavailable token", 0, null))
     }
+    const token = authHeader.split(" ")[1]
+    
+    jwt.verify(token, secret.key, (err, user) => {
+        if (err) {
+            return res.status(403).json(defs.response("Error", "Invalid token", 0, null))
+        }
+        req.user = user
+        next()
+    })
 }
 
 // const connection = mysql.createConnection(dataCfg)
@@ -64,10 +67,31 @@ app.post("/register", (req, res) => {
     })
 
 })
+//login endpoint
+app.post("/login", (req, res) => {
+    const postData = req.body
+    const username = postData.username
+    const password = postData.password
+
+    connection.query("SELECT * FROM users WHERE username = ?", [username], (err, rows) => {
+        if (err) {
+            res.status(503).json(defs.response("Error", "Internal server error", 0, null))
+        }
+        if (rows.length === 0) {
+            return res.status(401).json(defs.response("Error", "Invalid credentials", 0, null))
+        }
+        const user = rows[0]
+        if (user.password !== password) {
+            return res.status(401).json(defs.response("Error", "Invalid credentials", 0, null))
+        }
+        const token = jwt.sign({ id: user.id, role: user.role }, secret.key, { expiresIn: '1h' })
+        res.json({ token: token })
+    })
+})
 
 // get NOTES
 app.get("/notes", (req, res) => {
-    connection.query("SELECT * FROM notes", (err, result) => {
+    connection.query("SELECT * FROM notes WHERE user_id = ?", (err, result) => {
         if (err) {
             return res.status(503).json(defs.response("ERROR", "Notes NOT found", 0, null))
         } else {
@@ -136,7 +160,7 @@ app.post("/note", (req, res) => {
 app.put("/note/:id", (req, res) => {
     const postData = req.body
     const title = postData.title
-    const note = postData.note 
+    const note = postData.note
     const id = req.params.id
     if (!title || title.trim() === "") {
         return res.status(400).json(defs.response("Error", "Title can not be empty", 0, null))

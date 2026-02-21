@@ -1,0 +1,16 @@
+CREATE TABLE `users` (
+	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`username` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`email` VARCHAR(150) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`password` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`role` ENUM('user','admin') NOT NULL DEFAULT 'user' COLLATE 'utf8mb4_0900_ai_ci',
+	`created_at` TIMESTAMP NOT NULL DEFAULT (now()),
+	`updated_at` TIMESTAMP NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`) USING BTREE,
+	UNIQUE INDEX `email` (`email`) USING BTREE,
+	UNIQUE INDEX `username` (`username`) USING BTREE
+)
+COLLATE='utf8mb4_0900_ai_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=8
+;
