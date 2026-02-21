@@ -56,152 +56,99 @@ Delete all notes from the database.
 
 # Notes API
 
-A simple Express.js REST API for managing notes with MySQL database integration.
+Lightweight Express.js REST API for creating and managing notes with MySQL persistence.
 
-## Features
+## Quick Start
 
-- Create, read, update, and delete notes
-- CORS enabled for cross-origin requests
-- JSON request/response format
-- Database persistence with MySQL
-- API availability status checking
+- Prerequisites: Node.js (14+), MySQL
+- Install dependencies:
 
-## Prerequisites
-
-- Node.js
-- MySQL server
-- npm packages: `express`, `mysql2`, `cors`
-
-## Installation
-
-1. Clone the repository
-2. Install dependencies:
-    ```bash
-    npm install express mysql2 cors
-    ```
-3. Configure database credentials in `src/cfg.js`
-4. Start the server:
-    ```bash
-    node api.js
-    ```
-
-The API runs on `http://localhost:3000`
-
-## Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/notes` | Retrieve all notes |
-| GET | `/note/search/:note` | Search note |
-| POST | `/note` | Create a new note |
-| PUT | `/note/:id` | Update a note by ID |
-| DELETE | `/note/:id` | Delete a specific note |
-| DELETE | `/notes` | Delete all notes |
-
-## API Version
-
-Current version: `1.0.0`
-
-## Project Structure
-
-```
-Notes/
-├── src/
-│   ├── cfg.js          # Database configuration
-│   └── responses.js    # Response definitions
-├── db/
-│   └── schema.sql      # Database schema
-├── api.js              # Main API server
-└── README.md           # Project documentation
+```bash
+npm install
 ```
 
-## Database Schema
+- Copy the example environment file and update credentials:
 
-The `notes` table includes:
-- `id` - Auto-increment primary key
-- `title` - Note title (required, max 255 characters)
-- `note` - Note content (optional)
-- `created_at` - Timestamp of creation
-- `modified_at` - Timestamp of last modification
-
-## Environment Variables
-
-Create a `.env` file with the following variables:
-```
-DB_HOST=localhost
-DB_USER=root
-DB_PASS=your_password
-DB_NAME=notes_db
-DB_PORT=3306
+```bash
+cp env.example .env
+# edit .env to set DB credentials and JWT secret
 ```
 
-## Endpoint Details
+- Import the database schema:
 
-### GET `/notes`
-Returns all notes from the database.
+```sql
+-- run the SQL in db/schema.sql (or src/db/schema.sql) to create tables
+```
 
-### GET `/note/:id`
-Retrieve a specific note by ID. Returns 404 if not found.
+- Start the server:
 
-### GET `/note/search/:note`
-Search notes by content using pattern matching.
+```bash
+node api.js
+```
 
-### POST `/note`
-Create a new note. Requires `title` and `note` in request body.
+The API listens on http://localhost:3000 by default.
 
-### PUT `/note/:id`
-Update a note's content. Requires `title` and `note` in request body.
+## Configuration
 
-### DELETE `/note/:id`
-Delete a specific note by ID.
+- Database configuration is read from `src/cfg.js` (and `.env`).
+- Application secret for JWT is in `src/secret.js` or via environment variables.
 
-### DELETE `/note/deleteAll`
-Delete all notes from the database.
+## Database
 
-# Notes API
+Schema is provided in `db/schema.sql` and `src/db/schema.sql`. The primary table is `notes` with these columns:
 
-A simple Express.js REST API for managing notes with MySQL database integration.
+- `id` (INT, PK, AUTO_INCREMENT)
+- `title` (VARCHAR)
+- `note` (TEXT)
+- `created_at` (DATETIME)
+- `modified_at` (DATETIME)
 
-## Features
+## API Endpoints
 
-- Create, read, update, and delete notes
-- CORS enabled for cross-origin requests
-- JSON request/response format
-- Database persistence with MySQL
-- API availability status checking
+All requests and responses use JSON.
 
-## Prerequisites
+- POST `/register` — Register a new user. Body: `{ "username", "email", "password" }`.
+- POST `/login` — Authenticate and receive a JWT. Body: `{ "username", "password" }`.
 
-- Node.js
-- MySQL server
-- npm packages: `express`, `mysql2`, `cors`
+- GET `/notes` — Get all notes.
+- GET `/note/:id` — Get a single note by ID.
+- GET `/note/search/:note` — Search notes by text (pattern match).
+- POST `/note` — Create a new note. Body: `{ "title", "note" }`.
+- PUT `/note/:id` — Update a note. Body: `{ "title", "note" }`.
+- DELETE `/note/:id` — Delete a note by ID.
+- DELETE `/notes` — Delete all notes.
 
-## Installation
+Example: create a note with curl
 
-1. Clone the repository
-2. Install dependencies:
-    ```bash
-    npm install express mysql2 cors
-    ```
-3. Configure database credentials in `src/cfg.js`
-4. Start the server:
-    ```bash
-    node api.js
-    ```
+```bash
+curl -X POST http://localhost:3000/note \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Shopping","note":"Buy milk"}'
+```
 
-The API runs on `http://localhost:3000`
+Authentication: the project uses JWTs. Include `Authorization: Bearer <token>` for protected endpoints when applicable.
 
-## Endpoints
+## Files of interest
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/notes` | Retrieve all notes |
-| GET | `/note/search/:note` | Search note |
-| POST | `/note` | Create a new note |
-| PUT | `/note/:id` | Update a note by ID |
-| DELETE | `/note/:id` | Delete a specific note |
-| DELETE | `/notes` | Delete all notes |
+- `api.js` — main server and route definitions
+- `src/cfg.js` — DB configuration
+- `src/secret.js` — JWT secret
+- `db/schema.sql` and `src/db/schema.sql` — SQL schema
 
-## API Version
+## Troubleshooting
 
-Current version: `1.0.0`
+- If you get connection errors, verify `.env` credentials and that MySQL is running.
+- For duplicate user/email on registration, the DB will reject the insert; ensure unique constraints are handled.
+
+## Next steps
+
+- Add validation and password hashing (e.g., `bcrypt`) for production readiness.
+- Protect endpoints with the provided `authToken` middleware where required.
+
+---
+
+If you'd like, I can also:
+
+- run the server locally and smoke-test endpoints
+- add a quick Postman collection or example requests file
+
