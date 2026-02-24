@@ -16,7 +16,6 @@ app.use(express.urlencoded({ extended: true }))
 
 app.listen(3000, () => {
     console.log("API is running")
-    console.log(secret.key)
 })
 const API_VERSION = "1.0.0"
 const API_AVAILABLE = true
@@ -33,17 +32,17 @@ const authToken = (req, res, next) => {
     const authHeader = req.headers.authorization
 
     if (!authHeader) {
-        return res.status(403).json(defs.response("Error", "Unavailable token", 0, null))
+        return res.status(401).json(defs.response("Error", "Unavailable token", 0, null))
     }
     const token = authHeader.split(" ")[1]
-    
-    jwt.verify(token, secret.key, (err, user) => {
-        if (err) {
-            return res.status(403).json(defs.response("Error", "Invalid token", 0, null))
-        }
-        req.user = user
+    try {
+        req.userId = jwt.verify(token, secret.key).id
         next()
-    })
+    } catch (err) {
+        return res.status(401).json(
+            defs.response("Error", err, 0, null)
+        )
+    }
 }
 
 // const connection = mysql.createConnection(dataCfg)
@@ -65,8 +64,15 @@ app.post("/register", (req, res) => {
             return res.status(201).json(defs.response("Success", "Wellcome !, Please Log-in again", result.length))
         }
     })
-
 })
+// // Formato de Registro = 
+//      {
+//          username:"joao",
+//          email:"joao@example.com",
+//          password: "123123123"
+//                      
+//      }
+
 //login endpoint
 app.post("/login", (req, res) => {
     const postData = req.body
@@ -88,29 +94,36 @@ app.post("/login", (req, res) => {
         res.json({ token: token })
     })
 })
+// // Formato de LOGIN = 
+//      {
+//          username:"joao",
+//          password: "123123123"
+//      }
 
 // get NOTES
-app.get("/notes", (req, res) => {
-    connection.query("SELECT * FROM notes WHERE user_id = ?", (err, result) => {
+app.get("/notes", authToken, (req, res) => {
+    const userId = req.userId
+    connection.query("SELECT * FROM notes WHERE user_id = ?", [userId], (err, result) => {
         if (err) {
-            return res.status(503).json(defs.response("ERROR", "Notes NOT found", 0, null))
+            return res.status(404).json(defs.response("ERROR", "Notes NOT found", 0, null))
         } else {
             return res.status(200).json(result)
         }
     })
 })
 // Get note by ID
-app.get("/note/:id", (req, res) => {
+app.get("/note/:id", authToken, (req, res) => {
+    const userId = req.userId
     const id = Number(req.params.id)
     if (!Number.isInteger(id)) {
         return res.status(400).json(defs.response("Error", "ID must be a number !", 0, null))
     }
-    connection.query("SELECT * FROM notes WHERE id = ?", [id], (err, rows) => {
+    connection.query("SELECT * FROM notes WHERE id = ? AND user_id = ?", [id, userId], (err, rows) => {
         if (!err) {
             if (rows.length > 0) {
                 return res.json(defs.response("Success", "Note found", rows.length, rows))
             } else {
-                return res.status(404).json(defs.response("Error", "Task not found", 0, null))
+                return res.status(404).json(defs.response("Error", "Note not found", 0, null))
             }
         } else {
             res.status(500).json(defs.response("Error", err.message, 0, null))
@@ -118,12 +131,13 @@ app.get("/note/:id", (req, res) => {
     })
 })
 //search note by NOTE
-app.get("/note/search/:note", (req, res) => {
+app.get("/note/search/:note", authToken, (req, res) => {
     const note = String(req.params.note)
+    const userId = req.userId
     if (!note || note.trim() === "") {
         return res.status(400).json(defs.response("Error", "Search term is required", 0, null))
     }
-    connection.query("SELECT * FROM notes WHERE note LIKE ?", [`%${note}%`], (err, rows) => {
+    connection.query("SELECT * FROM notes WHERE note LIKE ? AND user_id = ?", [`%${note}%`, userId], (err, rows) => {
         if (!err) {
             if (rows.length > 0) {
                 return res.json(defs.response("Success", "Note(s) found", rows.affectedRows, rows))
@@ -136,10 +150,11 @@ app.get("/note/search/:note", (req, res) => {
     })
 })
 // create a note 
-app.post("/note", (req, res) => {
+app.post("/note", authToken, (req, res) => {
     const postData = req.body
     const note = postData.note
     const title = postData.title
+    const userId = req.userId
     //check if data is invalid
     if (!title || title.trim() === "") {
         return res.status(400).json(defs.response("Error", "Title can not be empty", 0, null))
@@ -148,7 +163,7 @@ app.post("/note", (req, res) => {
         return res.status(400).json(defs.response("Error", "Note must be a content", 0, null))
     }
     // query connection  
-    connection.query("INSERT INTO notes (title, note, created_at, modified_at) VALUES (?, ?, NOW(), NOW())", [title, note], (err, result) => {
+    connection.query("INSERT INTO notes (title, note, user_id) VALUES(?, ?, ?)", [title, note, userId], (err, result) => {
         if (!err) {
             return res.status(201).json(defs.response("Success", "Note created", result.affectedRows, null))
         } else {
@@ -157,11 +172,12 @@ app.post("/note", (req, res) => {
     })
 })
 // edit NOTE
-app.put("/note/:id", (req, res) => {
+app.put("/note/:id", authToken, (req, res) => {
     const postData = req.body
     const title = postData.title
     const note = postData.note
     const id = req.params.id
+    const userId = req.userId
     if (!title || title.trim() === "") {
         return res.status(400).json(defs.response("Error", "Title can not be empty", 0, null))
     }
@@ -169,7 +185,7 @@ app.put("/note/:id", (req, res) => {
         return res.status(400).json(defs.response("Error", "Note must be a content", 0, null))
     }
     // query
-    connection.query("UPDATE notes SET title = ?, note = ? WHERE id = ?", [title, note, id], (err, result) => {
+    connection.query("UPDATE notes SET title = ?, note = ? WHERE id = ? AND user_id = ?", [title, note, id, userId], (err, result) => {
         if (!err) {
             if (result.affectedRows > 0) {
                 res.json(defs.response("Success", "Note sussefully updated", result.affectedRows, result))
@@ -182,8 +198,9 @@ app.put("/note/:id", (req, res) => {
     })
 })
 // DELETE ALL NOTES
-app.delete("/notes", (req, res) => {
-    connection.query("DELETE FROM notes", (err, rows) => {
+app.delete("/notes", authToken, (req, res) => {
+    const userId = req.userId
+    connection.query("DELETE FROM notes WHERE user_id = ?", [userId], (err, rows) => {
         if (!err) {
             if (rows.affectedRows <= 0) {
                 res.status(400).json(defs.response("Error", "Do not exists notes here!", 0, null))
@@ -196,15 +213,16 @@ app.delete("/notes", (req, res) => {
     })
 })
 // delete specifc note
-app.delete("/note/:id", (req, res) => {
+app.delete("/note/:id", authToken, (req, res) => {
     const id = req.params.id
+    const userId = req.userId
     // query connection
-    connection.query("DELETE FROM notes WHERE id = ?", [id], (err, rows) => {
+    connection.query("DELETE FROM notes WHERE id = ? AND user_id = ?", [id, userId], (err, rows) => {
         if (!err) {
             if (rows.affectedRows > 0) {
-                res.status(200).json(defs.response(`Success`, `Task ${id} are deleted`, rows.affectedRows, null))
+                res.status(200).json(defs.response(`Success`, `Note ${id} are deleted`, rows.affectedRows, null))
             } else {
-                res.status(404).json(defs.response("Error", "Task not found", 0, null))
+                res.status(404).json(defs.response("Error", "Note not found", 0, null))
             }
         } else {
             res.status(500).json(defs.response("Error", err.message, 0, null))
