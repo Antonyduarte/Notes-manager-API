@@ -7,7 +7,7 @@ Lightweight REST API for managing user notes (Node.js + Express + MySQL).
 - Search notes by text
 
 ## Requirements
-- Node.js (>=14)
+- Node.js 
 - MySQL
 
 ## Environment
@@ -25,33 +25,17 @@ Create a `.env` file with the following variables:
 2. Start MySQL and create the database
 3. npm start (the server listens on port 3000)
 
-## Database (example schemas)
-CREATE TABLE users (
-	id INT AUTO_INCREMENT PRIMARY KEY,
-	username VARCHAR(255) UNIQUE NOT NULL,
-	email VARCHAR(255) UNIQUE NOT NULL,
-	password VARCHAR(255) NOT NULL,
-	role VARCHAR(50) DEFAULT 'user'
-);
-
-CREATE TABLE notes (
-	id INT AUTO_INCREMENT PRIMARY KEY,
-	title VARCHAR(255) NOT NULL,
-	note TEXT NOT NULL,
-	user_id INT NOT NULL,
-	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
 
 ## Endpoints
 - POST /register
-	- Body: { "username":"...", "email":"...", "password":"..." }
+	```- Body: { "username":"...", "email":"...", "password":"..." }```
 
 - POST /login
-	- Body: { "username":"...", "password":"..." }
-	- Response: { "token": "<jwt>" }
+	```- Body: { "username":"...", "password":"..." }```
+	```- Response: { "token": "<jwt>" }```
 
 All note endpoints require Authorization header: `Authorization: Bearer <token>`
-
+```
 - GET /notes — list all notes for authenticated user
 - GET /note/:id — get specific note by id
 - GET /note/search/:note — search notes by text
@@ -61,7 +45,7 @@ All note endpoints require Authorization header: `Authorization: Bearer <token>`
 	- Body: { "title":"...", "note":"..." }
 - DELETE /notes — delete all notes for user
 - DELETE /note/:id — delete specific note
-
+```
 ## Responses
 Responses follow a simple JSON wrapper for errors/success plus some endpoints return raw results. HTTP status codes are used appropriately (200, 201, 400, 401, 404, 500).
 
