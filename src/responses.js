@@ -7,14 +7,14 @@ function response(status, message, afftdrows, data = null) {
         timeStamp: new Date().getTime()
     }
 }
-function userReq(username, email, password) {
-    return {
-        username,
-        email,
-        password,
-    }
-}
+// function userReq(username, email, password) {
+//     return {
+//         username,
+//         email,
+//         password,
+//     }
+// }
 
 module.exports = {
-    response, userReq
+    response
 }
