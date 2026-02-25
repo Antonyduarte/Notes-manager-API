@@ -40,9 +40,23 @@ All note endpoints require Authorization header: `Authorization: Bearer <token>`
 - GET /note/:id — get specific note by id
 - GET /note/search/:note — search notes by text
 - POST /note — create note
-	- Body: { "title":"...", "note":"..." }
+	```
+	Body: { 
+		
+		"title":"...",
+		"note":"..." 
+		}
+
+	```
 - PUT /note/:id — update note
-	- Body: { "title":"...", "note":"..." }
+```
+
+	- Body: {
+			  "title":"...",
+			  "note":"..." 
+			}
+
+```
 - DELETE /notes — delete all notes for user
 - DELETE /note/:id — delete specific note
 ```
