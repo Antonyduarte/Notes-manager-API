@@ -35,22 +35,21 @@ Create a `.env` file with the following variables:
 	```- Response: { "token": "<jwt>" }```
 
 All note endpoints require Authorization header: `Authorization: Bearer <token>`
-```
+
 - GET /notes — list all notes for authenticated user
 - GET /note/:id — get specific note by id
 - GET /note/search/:note — search notes by text
 - POST /note — create note
-	```
+```
 	Body: { 
-		
+
 		"title":"...",
 		"note":"..." 
 		}
 
-	```
+```
 - PUT /note/:id — update note
 ```
-
 	- Body: {
 			  "title":"...",
 			  "note":"..." 
