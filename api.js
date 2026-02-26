@@ -1,6 +1,7 @@
 // require const's
 require("dotenv").config()
 const jwt = require("jsonwebtoken")
+const bcrypt = require("bcrypt")
 const express = require("express")
 const mysql = require("mysql2")
 const cors = require("cors")
@@ -48,20 +49,34 @@ const authToken = (req, res, next) => {
 // const connection = mysql.createConnection(dataCfg)
 const connection = mysql.createPool(dataCfg)
 //register endpoint
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
     const postData = req.body
     const username = postData.username
     const email = postData.email
     const password = postData.password
+    if (!username || !password || !email) {
+        res.status(400).json(defs.response("Error", "Username, Email and password are required", 0, null))
+    }
 
-    connection.query("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", [username, email, password], (err, result) => {
-        if (username.trim() === '' || email.trim() === '' || password.trim() === '') {
-            return res.status(400).json(defs.response("Error", "Is there any empty field", 0, null)) //
-        }
+    connection.query("SELECT * FROM users WHERE username = ?", [username], async (err, rows) => {
         if (err) {
-            return res.status(500).json(defs.response("Error", "Username or email already exists.", 0, null))
-        } else {
-            return res.status(201).json(defs.response("Success", "Wellcome !, Please Log-in again", result.length))
+            return res.status(500).json(defs.response("Error", err.message, 0, null))
+        }
+        if (rows.length > 0) {
+            return res.status(409).json(defs.response("Error", "User already exists", 0, null ))
+        }
+        try {
+            const hash = await bcrypt.hash(password, 10)
+
+            connection.query("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", [username, email, hash], (err) =>{
+                if (err) {
+                    return res.status(500).json(defs.response("Error", "Failed to register, try again later", 0, null))
+                } else {
+                    res.status(201).json(defs.response("Sucess", "User sussefully created", rows.length))
+                }
+            })
+        } catch (error) {
+            return res.status(500).json(defs.response("Error", error, 0, null))
         }
     })
 })
@@ -74,22 +89,22 @@ app.post("/register", (req, res) => {
 //      }
 
 //login endpoint
-app.post("/login", (req, res) => {
-    const postData = req.body
-    const username = postData.username
-    const password = postData.password
+app.post("/login", async (req, res) => {
+    const { username, password } = req.body
 
-    connection.query("SELECT * FROM users WHERE username = ?", [username], (err, rows) => {
+    connection.query("SELECT * FROM users WHERE username = ?", [username], async (err, rows) => {
         if (err) {
-            res.status(503).json(defs.response("Error", "Internal server error", 0, null))
+            return res.status(500).json(defs.response("Error", err, 0, null))
         }
         if (rows.length === 0) {
-            return res.status(401).json(defs.response("Error", "Invalid credentials", 0, null))
+            return res.status(404).json(defs.response("Username or password invalid", 0, null))
         }
         const user = rows[0]
-        if (user.password !== password) {
-            return res.status(401).json(defs.response("Error", "Invalid credentials", 0, null))
+        const passCompare = await bcrypt.compare(password, user.password)
+        if (!passCompare) {
+            return res.status(400).json(defs.response("Error", "Invalid credentials", 0, null))
         }
+
         const token = jwt.sign({ id: user.id, role: user.role }, secret.key, { expiresIn: '1h' })
         res.json({ token: token })
     })
