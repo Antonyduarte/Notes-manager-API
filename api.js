@@ -1,250 +1,250 @@
-// require const's
-require("dotenv").config()
-const jwt = require("jsonwebtoken")
-const bcrypt = require("bcrypt")
-const express = require("express")
-const mysql = require("mysql2")
-const cors = require("cors")
-const dataCfg = require("./src/cfg")
-const defs = require("./src/responses")
-const app = express()
-const secret = require("./src/secret")
+// // require const's
+// require("dotenv").config()
+// const jwt = require("jsonwebtoken")
+// const bcrypt = require("bcrypt")
+// const express = require("express")
+// const mysql = require("mysql2")
+// const cors = require("cors")
+// const dataCfg = require("./src/cfg")
+// const defs = require("./src/responses")
+// const app = express()
+// const secret = require("./src/secret")
 
 
-app.use(cors())
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+// app.use(cors())
+// app.use(express.json())
+// app.use(express.urlencoded({ extended: true }))
 
-app.listen(3000, () => {
-    console.log("API is running")
-})
-const API_VERSION = "1.0.0"
-const API_AVAILABLE = true
-app.use((req, res, next) => {
-    if (API_AVAILABLE === true) {
-        next()
-    } else {
-        return res.status(503).json(defs.response("Error", "Sorry, the API is in maintence", 0, null))
-    }
-})
+// app.listen(3000, () => {
+//     console.log("API is running")
+// })
+// const API_VERSION = "1.0.0"
+// const API_AVAILABLE = true
+// app.use((req, res, next) => {
+//     if (API_AVAILABLE === true) {
+//         next()
+//     } else {
+//         return res.status(503).json(defs.response("Error", "Sorry, the API is in maintence", 0, null))
+//     }
+// })
 
-//auth middleware
-const authToken = (req, res, next) => {
-    const authHeader = req.headers.authorization
+// //auth middleware
+// const authToken = (req, res, next) => {
+//     const authHeader = req.headers.authorization
 
-    if (!authHeader) {
-        return res.status(401).json(defs.response("Error", "Unavailable token", 0, null))
-    }
-    const token = authHeader.split(" ")[1]
-    try {
-        req.userId = jwt.verify(token, secret.key).id
-        next()
-    } catch (err) {
-        return res.status(401).json(
-            defs.response("Error", err, 0, null)
-        )
-    }
-}
+//     if (!authHeader) {
+//         return res.status(401).json(defs.response("Error", "Unavailable token", 0, null))
+//     }
+//     const token = authHeader.split(" ")[1]
+//     try {
+//         req.userId = jwt.verify(token, secret.key).id
+//         next()
+//     } catch (err) {
+//         return res.status(401).json(
+//             defs.response("Error", err, 0, null)
+//         )
+//     }
+// }
 
-// const connection = mysql.createConnection(dataCfg)
-const connection = mysql.createPool(dataCfg)
-//register endpoint
-app.post("/register", async (req, res) => {
-    const postData = req.body
-    const username = postData.username
-    const email = postData.email
-    const password = postData.password
-    if (!username || !password || !email) {
-        res.status(400).json(defs.response("Error", "Username, Email and password are required", 0, null))
-    }
+// // const connection = mysql.createConnection(dataCfg)
+// const connection = mysql.createPool(dataCfg)
+// //register endpoint
+// app.post("/register", async (req, res) => {
+//     const postData = req.body
+//     const username = postData.username
+//     const email = postData.email
+//     const password = postData.password
+//     if (!username || !password || !email) {
+//         res.status(400).json(defs.response("Error", "Username, Email and password are required", 0, null))
+//     }
 
-    connection.query("SELECT * FROM users WHERE username = ?", [username], async (err, rows) => {
-        if (err) {
-            return res.status(500).json(defs.response("Error", err.message, 0, null))
-        }
-        if (rows.length > 0) {
-            return res.status(409).json(defs.response("Error", "User already exists", 0, null ))
-        }
-        try {
-            const hash = await bcrypt.hash(password, 10)
+//     connection.query("SELECT * FROM users WHERE username = ?", [username], async (err, rows) => {
+//         if (err) {
+//             return res.status(500).json(defs.response("Error", err.message, 0, null))
+//         }
+//         if (rows.length > 0) {
+//             return res.status(409).json(defs.response("Error", "User already exists", 0, null ))
+//         }
+//         try {
+//             const hash = await bcrypt.hash(password, 10)
 
-            connection.query("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", [username, email, hash], (err) =>{
-                if (err) {
-                    return res.status(500).json(defs.response("Error", "Failed to register, try again later", 0, null))
-                } else {
-                    res.status(201).json(defs.response("Sucess", "User sussefully created", rows.length))
-                }
-            })
-        } catch (error) {
-            return res.status(500).json(defs.response("Error", error, 0, null))
-        }
-    })
-})
-// // Formato de Registro = 
-//      {
-//          username:"joao",
-//          email:"joao@example.com",
-//          password: "123123123"
-//                      
-//      }
+//             connection.query("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", [username, email, hash], (err) =>{
+//                 if (err) {
+//                     return res.status(500).json(defs.response("Error", "Failed to register, try again later", 0, null))
+//                 } else {
+//                     res.status(201).json(defs.response("Sucess", "User sussefully created", rows.length))
+//                 }
+//             })
+//         } catch (error) {
+//             return res.status(500).json(defs.response("Error", error, 0, null))
+//         }
+//     })
+// })
+// // // Formato de Registro = 
+// //      {
+// //          username:"joao",
+// //          email:"joao@example.com",
+// //          password: "123123123"
+// //                      
+// //      }
 
-//login endpoint
-app.post("/login", async (req, res) => {
-    const { username, password } = req.body
+// //login endpoint
+// app.post("/login", async (req, res) => {
+//     const { username, password } = req.body
 
-    connection.query("SELECT * FROM users WHERE username = ?", [username], async (err, rows) => {
-        if (err) {
-            return res.status(500).json(defs.response("Error", err, 0, null))
-        }
-        if (rows.length === 0) {
-            return res.status(404).json(defs.response("Username or password invalid", 0, null))
-        }
-        const user = rows[0]
-        const passCompare = await bcrypt.compare(password, user.password)
-        if (!passCompare) {
-            return res.status(400).json(defs.response("Error", "Invalid credentials", 0, null))
-        }
+//     connection.query("SELECT * FROM users WHERE username = ?", [username], async (err, rows) => {
+//         if (err) {
+//             return res.status(500).json(defs.response("Error", err, 0, null))
+//         }
+//         if (rows.length === 0) {
+//             return res.status(404).json(defs.response("Username or password invalid", 0, null))
+//         }
+//         const user = rows[0]
+//         const passCompare = await bcrypt.compare(password, user.password)
+//         if (!passCompare) {
+//             return res.status(400).json(defs.response("Error", "Invalid credentials", 0, null))
+//         }
 
-        const token = jwt.sign({ id: user.id, role: user.role }, secret.key, { expiresIn: '1h' })
-        res.json({ token: token })
-    })
-})
-// // Formato de LOGIN = 
-//      {
-//          username:"joao",
-//          password: "123123123"
-//      }
+//         const token = jwt.sign({ id: user.id, role: user.role }, secret.key, { expiresIn: '1h' })
+//         res.json({ token: token })
+//     })
+// })
+// // // Formato de LOGIN = 
+// //      {
+// //          username:"joao",
+// //          password: "123123123"
+// //      }
 
-// get NOTES
-app.get("/notes", authToken, (req, res) => {
-    const userId = req.userId
-    connection.query("SELECT * FROM notes WHERE user_id = ?", [userId], (err, result) => {
-        if (err) {
-            return res.status(404).json(defs.response("ERROR", "Notes NOT found", 0, null))
-        } else {
-            return res.status(200).json(result)
-        }
-    })
-})
-// Get note by ID
-app.get("/note/:id", authToken, (req, res) => {
-    const userId = req.userId
-    const id = Number(req.params.id)
-    if (!Number.isInteger(id)) {
-        return res.status(400).json(defs.response("Error", "ID must be a number !", 0, null))
-    }
-    connection.query("SELECT * FROM notes WHERE id = ? AND user_id = ?", [id, userId], (err, rows) => {
-        if (!err) {
-            if (rows.length > 0) {
-                return res.json(defs.response("Success", "Note found", rows.length, rows))
-            } else {
-                return res.status(404).json(defs.response("Error", "Note not found", 0, null))
-            }
-        } else {
-            res.status(500).json(defs.response("Error", err.message, 0, null))
-        }
-    })
-})
-//search note by NOTE
-app.get("/note/search/:note", authToken, (req, res) => {
-    const note = String(req.params.note)
-    const userId = req.userId
-    if (!note || note.trim() === "") {
-        return res.status(400).json(defs.response("Error", "Search term is required", 0, null))
-    }
-    connection.query("SELECT * FROM notes WHERE note LIKE ? AND user_id = ?", [`%${note}%`, userId], (err, rows) => {
-        if (!err) {
-            if (rows.length > 0) {
-                return res.json(defs.response("Success", "Note(s) found", rows.affectedRows, rows))
-            } else {
-                return res.status(404).json(defs.response("Error", "Note not found", 0, null))
-            }
-        } else {
-            res.status(500).json("Error", err.message, 0, null)
-        }
-    })
-})
-// create a note 
-app.post("/note", authToken, (req, res) => {
-    const postData = req.body
-    const note = postData.note
-    const title = postData.title
-    const userId = req.userId
-    //check if data is invalid
-    if (!title || title.trim() === "") {
-        return res.status(400).json(defs.response("Error", "Title can not be empty", 0, null))
-    }
-    if (!note || note.trim() === "") {
-        return res.status(400).json(defs.response("Error", "Note must be a content", 0, null))
-    }
-    // query connection  
-    connection.query("INSERT INTO notes (title, note, user_id) VALUES(?, ?, ?)", [title, note, userId], (err, result) => {
-        if (!err) {
-            return res.status(201).json(defs.response("Success", "Note created", result.affectedRows, null))
-        } else {
-            return res.status(500).json(defs.response("Error", err.message, 0, null))
-        }
-    })
-})
-// edit NOTE
-app.put("/note/:id", authToken, (req, res) => {
-    const postData = req.body
-    const title = postData.title
-    const note = postData.note
-    const id = req.params.id
-    const userId = req.userId
-    if (!title || title.trim() === "") {
-        return res.status(400).json(defs.response("Error", "Title can not be empty", 0, null))
-    }
-    if (!note || note.trim() === "") {
-        return res.status(400).json(defs.response("Error", "Note must be a content", 0, null))
-    }
-    // query
-    connection.query("UPDATE notes SET title = ?, note = ? WHERE id = ? AND user_id = ?", [title, note, id, userId], (err, result) => {
-        if (!err) {
-            if (result.affectedRows > 0) {
-                res.json(defs.response("Success", "Note sussefully updated", result.affectedRows, result))
-            } else {
-                return res.status(404).json(defs.response("Error", "ID not found", 0, null))
-            }
-        } else {
-            return res.status(500).json(defs.response("Internal error", err.message, 0, null))
-        }
-    })
-})
-// DELETE ALL NOTES
-app.delete("/notes", authToken, (req, res) => {
-    const userId = req.userId
-    connection.query("DELETE FROM notes WHERE user_id = ?", [userId], (err, rows) => {
-        if (!err) {
-            if (rows.affectedRows <= 0) {
-                res.status(400).json(defs.response("Error", "Do not exists notes here!", 0, null))
-            } else {
-                res.status(200).json(defs.response("Success", "All notes are deleted", rows.affectedRows,))
-            }
-        } else {
-            res.status(500).json(defs.response("Internal Error", err.message, 0, null))
-        }
-    })
-})
-// delete specifc note
-app.delete("/note/:id", authToken, (req, res) => {
-    const id = req.params.id
-    const userId = req.userId
-    // query connection
-    connection.query("DELETE FROM notes WHERE id = ? AND user_id = ?", [id, userId], (err, rows) => {
-        if (!err) {
-            if (rows.affectedRows > 0) {
-                res.status(200).json(defs.response(`Success`, `Note ${id} are deleted`, rows.affectedRows, null))
-            } else {
-                res.status(404).json(defs.response("Error", "Note not found", 0, null))
-            }
-        } else {
-            res.status(500).json(defs.response("Error", err.message, 0, null))
-        }
-    })
-})
+// // get NOTES
+// app.get("/notes", authToken, (req, res) => {
+//     const userId = req.userId
+//     connection.query("SELECT * FROM notes WHERE user_id = ?", [userId], (err, result) => {
+//         if (err) {
+//             return res.status(404).json(defs.response("ERROR", "Notes NOT found", 0, null))
+//         } else {
+//             return res.status(200).json(result)
+//         }
+//     })
+// })
+// // Get note by ID
+// app.get("/note/:id", authToken, (req, res) => {
+//     const userId = req.userId
+//     const id = Number(req.params.id)
+//     if (!Number.isInteger(id)) {
+//         return res.status(400).json(defs.response("Error", "ID must be a number !", 0, null))
+//     }
+//     connection.query("SELECT * FROM notes WHERE id = ? AND user_id = ?", [id, userId], (err, rows) => {
+//         if (!err) {
+//             if (rows.length > 0) {
+//                 return res.json(defs.response("Success", "Note found", rows.length, rows))
+//             } else {
+//                 return res.status(404).json(defs.response("Error", "Note not found", 0, null))
+//             }
+//         } else {
+//             res.status(500).json(defs.response("Error", err.message, 0, null))
+//         }
+//     })
+// })
+// //search note by NOTE
+// app.get("/note/search/:note", authToken, (req, res) => {
+//     const note = String(req.params.note)
+//     const userId = req.userId
+//     if (!note || note.trim() === "") {
+//         return res.status(400).json(defs.response("Error", "Search term is required", 0, null))
+//     }
+//     connection.query("SELECT * FROM notes WHERE note LIKE ? AND user_id = ?", [`%${note}%`, userId], (err, rows) => {
+//         if (!err) {
+//             if (rows.length > 0) {
+//                 return res.json(defs.response("Success", "Note(s) found", rows.affectedRows, rows))
+//             } else {
+//                 return res.status(404).json(defs.response("Error", "Note not found", 0, null))
+//             }
+//         } else {
+//             res.status(500).json("Error", err.message, 0, null)
+//         }
+//     })
+// })
+// // create a note 
+// app.post("/note", authToken, (req, res) => {
+//     const postData = req.body
+//     const note = postData.note
+//     const title = postData.title
+//     const userId = req.userId
+//     //check if data is invalid
+//     if (!title || title.trim() === "") {
+//         return res.status(400).json(defs.response("Error", "Title can not be empty", 0, null))
+//     }
+//     if (!note || note.trim() === "") {
+//         return res.status(400).json(defs.response("Error", "Note must be a content", 0, null))
+//     }
+//     // query connection  
+//     connection.query("INSERT INTO notes (title, note, user_id) VALUES(?, ?, ?)", [title, note, userId], (err, result) => {
+//         if (!err) {
+//             return res.status(201).json(defs.response("Success", "Note created", result.affectedRows, null))
+//         } else {
+//             return res.status(500).json(defs.response("Error", err.message, 0, null))
+//         }
+//     })
+// })
+// // edit NOTE
+// app.put("/note/:id", authToken, (req, res) => {
+//     const postData = req.body
+//     const title = postData.title
+//     const note = postData.note
+//     const id = req.params.id
+//     const userId = req.userId
+//     if (!title || title.trim() === "") {
+//         return res.status(400).json(defs.response("Error", "Title can not be empty", 0, null))
+//     }
+//     if (!note || note.trim() === "") {
+//         return res.status(400).json(defs.response("Error", "Note must be a content", 0, null))
+//     }
+//     // query
+//     connection.query("UPDATE notes SET title = ?, note = ? WHERE id = ? AND user_id = ?", [title, note, id, userId], (err, result) => {
+//         if (!err) {
+//             if (result.affectedRows > 0) {
+//                 res.json(defs.response("Success", "Note sussefully updated", result.affectedRows, result))
+//             } else {
+//                 return res.status(404).json(defs.response("Error", "ID not found", 0, null))
+//             }
+//         } else {
+//             return res.status(500).json(defs.response("Internal error", err.message, 0, null))
+//         }
+//     })
+// })
+// // DELETE ALL NOTES
+// app.delete("/notes", authToken, (req, res) => {
+//     const userId = req.userId
+//     connection.query("DELETE FROM notes WHERE user_id = ?", [userId], (err, rows) => {
+//         if (!err) {
+//             if (rows.affectedRows <= 0) {
+//                 res.status(400).json(defs.response("Error", "Do not exists notes here!", 0, null))
+//             } else {
+//                 res.status(200).json(defs.response("Success", "All notes are deleted", rows.affectedRows,))
+//             }
+//         } else {
+//             res.status(500).json(defs.response("Internal Error", err.message, 0, null))
+//         }
+//     })
+// })
+// // delete specifc note
+// app.delete("/note/:id", authToken, (req, res) => {
+//     const id = req.params.id
+//     const userId = req.userId
+//     // query connection
+//     connection.query("DELETE FROM notes WHERE id = ? AND user_id = ?", [id, userId], (err, rows) => {
+//         if (!err) {
+//             if (rows.affectedRows > 0) {
+//                 res.status(200).json(defs.response(`Success`, `Note ${id} are deleted`, rows.affectedRows, null))
+//             } else {
+//                 res.status(404).json(defs.response("Error", "Note not found", 0, null))
+//             }
+//         } else {
+//             res.status(500).json(defs.response("Error", err.message, 0, null))
+//         }
+//     })
+// })
 
-app.use((req, res) => {
-    res.status(404).json(defs.response("Error", "Route NOT found", 0, null))
-})
+// app.use((req, res) => {
+//     res.status(404).json(defs.response("Error", "Route NOT found", 0, null))
+// })
