@@ -35,3 +35,6 @@ build/
 
 # Misc
 .cache/
+
+#txt
+*.txt
